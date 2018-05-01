@@ -1,0 +1,116 @@
+package main
+
+import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/md5"
+	"database/sql"
+	"fmt"
+	_ "github.com/go-sqlite/sqlite3"
+	"os"
+	"os/exec"
+
+	"github.com/skip2/go-qrcode"
+)
+
+var commonIV = []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f}
+
+func main() {
+	os.Exit(1)
+	content := `
+	echo Enter y encryption input n decrypt ? [y/n]
+	read action
+	if [ "$action" == "y" ]
+	then
+		if [ -e "plaintext" ]
+		then
+			openssl aes-128-cbc -salt -in plaintext -out ciphertext
+			rm plaintext
+		else
+			echo Plaintext file does not exist .
+		fi
+	elif [ "$action" == "n" ]
+	then
+		if [ -e "ciphertext" ]
+		then
+			openssl aes-128-cbc -d -salt -in ciphertext -out plaintext
+			rm ciphertext
+		else
+			echo ciphertext file does not exist .
+		fi
+	else
+		echo input y or n .
+	fi
+`
+	//encrypt and decode
+	//openssl aes-128-cbc -salt -in plaintext -out ciphertext
+	//openssl aes-128-cbc -d -salt -in ciphertext -out plaintext.out
+	cmd := exec.Command("/bin/sh", "-c", content)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		fmt.Println(err)
+	}
+	os.Exit(2)
+	err = qrcode.WriteFile("https://www.baidu.com", qrcode.Medium, 256, "qr.png")
+	//需要去加密的字符串
+	plaintext := []byte("My name is Astaxie")
+	//如果传入加密串的话，plaint就是传入的字符串
+	if len(os.Args) > 1 {
+		plaintext = []byte(os.Args[1])
+	}
+
+	//aes的加密字符串
+	//key_text := "astaxie12798akljzmknm.ahkjkljl;k"
+	m := md5.Sum([]byte("cn100800"))
+	var key_text string = string(m[:])
+	if len(os.Args) > 2 {
+		key_text = os.Args[2]
+	}
+
+	fmt.Println(len(key_text))
+
+	// 创建加密算法aes
+	c, err := aes.NewCipher([]byte(key_text))
+	//c, err := aes.NewCipher(key_text)
+	if err != nil {
+		fmt.Printf("Error: NewCipher(%d bytes) = %s", len(key_text), err)
+		os.Exit(-1)
+	}
+
+	//加密字符串
+	cfb := cipher.NewCFBEncrypter(c, commonIV)
+	ciphertext := make([]byte, len(plaintext))
+	cfb.XORKeyStream(ciphertext, plaintext)
+	fmt.Printf("%s=>%x\n", plaintext, ciphertext)
+	fmt.Println(string(ciphertext))
+	fl, err := os.OpenFile("en_password", os.O_APPEND|os.O_CREATE|os.O_RDWR, 0644)
+	if err != nil {
+		panic(err)
+	}
+	//defer fl.Close()
+	if _, err := fl.Write(ciphertext); err != nil {
+		panic(err)
+	}
+
+	if _, err := fl.WriteString("mmmm\n"); err != nil {
+		panic(err)
+	}
+
+	f, err := os.OpenFile("en_password", os.O_RDWR, 0644)
+	b3 := make([]byte, 1000)
+	if _, err := f.Read(b3); err != nil {
+		panic(err)
+	}
+	fmt.Println(b3)
+	// 解密字符串
+	cfbdec := cipher.NewCFBDecrypter(c, commonIV)
+	plaintextCopy := make([]byte, len(ciphertext))
+	cfbdec.XORKeyStream(plaintextCopy, b3)
+	fmt.Printf("%x=>%s\n", b3, ciphertext)
+
+}
+
+func init() {
+}
