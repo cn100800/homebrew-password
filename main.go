@@ -2,11 +2,22 @@ package main
 
 import (
 	"database/sql"
+	"flag"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
+	"os"
+
+	"homebrew-password/version"
 )
 
 func main() {
+	v := flag.Bool("v", false, "version")
+	flag.Parse()
+	if *v {
+		version.GetVersion()
+		os.Exit(404)
+	}
+	os.Exit(301)
 	db, err := sql.Open("sqlite3", "test.sqlite")
 	checkErr(err)
 
