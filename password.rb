@@ -1,7 +1,7 @@
 # Documentation: https://docs.brew.sh/Formula-Cookbook
 #                http://www.rubydoc.info/github/Homebrew/brew/master/Formula
 # PLEASE REMOVE ALL GENERATED COMMENTS BEFORE SUBMITTING YOUR PULL REQUEST!
-class HomebrewPassword < Formula
+class Password < Formula
   desc "Encrypted storage password"
   homepage "https://github.com/cn100800/homebrew-password/releases/latest"
   url "https://github.com/cn100800/homebrew-password/releases/download/2018.05.08.release/password.zip"
