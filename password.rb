@@ -13,7 +13,7 @@ class Password < Formula
     # ENV.deparallelize  # if your formula fails when building in parallel
     # Remove unrecognized options if warned by configure
     # system "cmake", ".", *std_cmake_args
-    bin.install password
+    bin.install "password"
   end
 
   test do
