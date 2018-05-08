@@ -1,0 +1,2 @@
+# homebrew-password
+Encryption password
